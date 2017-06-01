@@ -1,0 +1,103 @@
+---
+title: "Prediction Assignment Writeup"
+author: "pvv88"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Executive Summary
+The data from mtcars will be analyzed to determine the relationship between the miles per gallon (mpg) and the transmission of the car. We use regression models and exploratory data analyses to identify how automatic (am = 0) and manual (am = 1) transmissions features affect the MPG feature. The t-test shows that there is a performance difference between cars with automatic and manual transmission.
+
+### Data Processing
+Load the data from mtcars and changed some variables (cyl, vs, gear, carb, and am) from numeric to factor. 
+```{r, eval = FALSE, cache = TRUE}
+data(mtcars)
+mtcars$am = factor(mtcars$am, label = c("Automatic", "Manual"))
+mtcars$cyl = as.factor(mtcars$cyl)
+mtcars$gear = as.factor(mtcars$gear)
+mtcars$car = as.factor(mtcars$carb)
+mtcars$vs = as.factor(mtcars$vs)
+auto = subset(mtcars, mtcars$am == "Automatic")
+manu = subset(mtcars, mtcars$am == "Manual")
+
+```
+
+```{r, echo = FALSE}
+mtcars$am = factor(mtcars$am, label = c("Automatic", "Manual"))
+mtcars$vs = factor(mtcars$vs)
+mtcars$gear = factor(mtcars$gear)
+mtcars$carb = factor(mtcars$carb)
+auto = subset(mtcars, mtcars$am == "Automatic")
+manu = subset(mtcars, mtcars$am == "Manual")
+```
+
+### Exploratory Analysis
+Plots were created to show how the data is distributed amongst transmission and mpg (Appendix, "MPG vs. Transmission") and scatterplot matrix (Appendix, "Scatterplot Matrix"). There is a clear distinction between automatic transmission and manual transmission vehicle's MPG. Manual cars have a higher maximum mpg and minimum mpg compared to automatic cars.
+
+### Hypothesis Testing
+```{r, eval= FALSE}
+t.test(manu$mpg, auto$mpg)
+```
+```{r, echo = FALSE}
+t.test(manu$mpg, auto$mpg)
+```
+T test shows low p-value at 0.003174 which indicates difference between manual and automatic transmissions.
+
+### Regression Analysis
+####Linear Regression
+Where am is the predictor and mpg is the output.
+```{r, eval = FALSE}
+fmodel<-lm(mpg~ am, data=mtcars)
+summary(fmodel)
+```
+It is observed that the p-value and adjusted R-squared is less than 0.05 which is not of significance. 
+
+####Multivariate Regression
+```{r, eval = FALSE}
+fmodel<-lm(mpg~.,data=mtcars)
+bmodel<-step(fmodel,direction='both')
+summary(bmodel)
+```
+bmodel contains the type of transmission in it, where the manual transmission has almost thrice the mileage per gallon of fuel than an automatic transmission car, while all the other variables are constant. This model explains an adjusted value of 0.8401 or 84.01% of variance. The coffecient of am1 (manual transmission) is about 1.8 which means that it has a greater weight in determining the mpg. The residual plots are shown in (Appendix, "Resudial Plots of the bmodel").
+
+### Conclusion
+
+Basing the adjusted-R values between linear (33.8%) and multivariate regression(84%), multivariate regression is the better model.  
+
+In addition, A 95% T test of the transmission of the cars to mpg shows that their means are significantly different. We therefore conclude that Manual transmission have better MPG compared to Automatic transmission.  
+
+### Appendix
+1. MPG vs. Transmission
+```{r, cache = TRUE}
+boxplot(data = mtcars, 
+        mpg ~ am,
+        xlab = "(am = 0) and manual (am = 1) Transmissions",
+        ylab = "miles per gallon",
+        main = "Boxplot of MPG vs. Transmission",
+        col = "lightgreen")
+```
+
+2. Regression Analysis
+```{r, echo = FALSE}
+fmodel = lm(mpg ~ ., data=mtcars)
+bmodel <- step(fmodel, direction = "both")
+summary(bmodel)
+confint(bmodel)
+```
+
+3. Scatterplot Matrix </br>
+```{r, echo = FALSE}
+pairs(mpg ~ ., data = mtcars)
+```
+
+4. Residual Plots of the bmodel
+```{r, echo = FALSE}
+library(ggfortify)
+autoplot(bmodel)
+```
